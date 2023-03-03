@@ -163,7 +163,7 @@ bool D3DApp::InitDirect3D()
 
 	CreateCommandObjects();
 	CreateSwapChain();
-	//CreateRtvAndDsvDescriptorHeaps();
+	CreateRtvAndDsvDescriptorHeaps();
 
 	return true;
 }
@@ -215,10 +215,30 @@ void D3DApp::CreateSwapChain()
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	// Note: Swap chain uses queue to perform flush.
-	ThrowIfFailed(mdxgiFactory->CreateSwapChain(
+	ThrowIfFailed(m_dxgiFactory->CreateSwapChain(
 		m_CommandQueue.Get(),
 		&sd,
 		m_SwapChain.GetAddressOf()));
+}
+
+void D3DApp::CreateRtvAndDsvDescriptorHeaps()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
+	rtvHeapDesc.NumDescriptors = m_nSwapChainBufferCount;
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	rtvHeapDesc.NodeMask = 0;
+	ThrowIfFailed(m_d3dDevice->CreateDescriptorHeap(
+		&rtvHeapDesc, IID_PPV_ARGS(m_RtvHeap.GetAddressOf())));
+
+
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	dsvHeapDesc.NodeMask = 0;
+	ThrowIfFailed(m_d3dDevice->CreateDescriptorHeap(
+		&dsvHeapDesc, IID_PPV_ARGS(m_DsvHeap.GetAddressOf())));
 }
 
 int D3DApp::Run()

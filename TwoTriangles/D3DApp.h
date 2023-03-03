@@ -22,6 +22,7 @@ public:
 	bool InitDirect3D();
 	void CreateCommandObjects();
 	void CreateSwapChain();
+	void CreateRtvAndDsvDescriptorHeaps();
 	int Run();
 
 
@@ -54,8 +55,12 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_CmdListAlloc;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 
-	// Backbuffer stuff
+	// Swap chain stuff
 	const int m_nSwapChainBufferCount = 2;
+
+	// Descriptor heaps
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
 
 
 	DXGI_FORMAT m_BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // Backbuffer format
