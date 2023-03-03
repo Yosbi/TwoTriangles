@@ -6,13 +6,17 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers.
 #endif
 
-#include <windows.h>
 #include <wrl/client.h>
 #include <d3d12.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
 #include <string>
 #include <comdef.h>
+#include <windows.h>
+
+// Linking necessary d3d12 libraries
+#pragma comment(lib, "D3D12.lib")
+#pragma comment(lib, "dxgi.lib")
 
 using Microsoft::WRL::ComPtr;
 class DxException
