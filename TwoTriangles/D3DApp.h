@@ -5,7 +5,7 @@
 
 #include "D3DUtil.h"
 
-
+using namespace DirectX;
 
 class D3DApp
 {
@@ -18,19 +18,35 @@ public:
 	LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	bool Initialize();
+	void OnResize();
+	
 	bool InitMainWindow();
 	bool InitDirect3D();
 	void CreateCommandObjects();
 	void CreateSwapChain();
 	void CreateRtvAndDsvDescriptorHeaps();
+	void LoadTriangles();
 	int Run();
+	void Draw();
+	void DrawTriangles();
 
+	void FlushCommandQueue();
 
-protected:
+	D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferView() const;
+	ID3D12Resource* getCurrentBackBuffer() const;
 
 
 private:
-	static D3DApp* m_this;
+	struct Vertex
+	{
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT4 color;
+	};
+
+
+private:
+	static D3DApp* sm_this;
 	HINSTANCE m_hInstance;
 	HWND m_hWnd;
 
@@ -39,35 +55,51 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> m_SwapChain;
 
 	// Fence stuff (cpu/gpu sync)
-	Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
-	UINT64 m_CurrentFence = 0;
+	Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
+	UINT64 m_nCurrentFence = 0;
 
+	// Buffers formats
+	DXGI_FORMAT m_BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // Backbuffer format
+	DXGI_FORMAT m_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // DeepStencil format
+
+	// Buffer descriptors sizes
 	UINT m_RtvDescriptorSize = 0;		// Render target 
 	UINT m_DsvDescriptorSize = 0;		// Deep Stencil 
 	UINT m_CbvSrvUavDescriptorSize = 0;	// Constant buffer
 
+	// Buffer Descriptor heaps
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+	// Swap chain stuff and actual buffers refs
+	static const int sm_nSwapChainBufferCount = 2;
+	int m_nCurrBackBuffer = 0;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_SwapChainBuffer[sm_nSwapChainBufferCount];
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_DepthStencilBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
+
 	// Multisampling 
-	bool      m4xMsaaState = false;    // 4X MSAA enabled
-	UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
+	bool      m_b4xMsaaState = false;    // 4X MSAA enabled
+	UINT      m_n4xMsaaQuality = 0;      // quality level of 4X MSAA
 
 	// Command objects
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_CommandQueue;
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_CmdListAlloc;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 
-	// Swap chain stuff
-	const int m_nSwapChainBufferCount = 2;
+	// Viewport and sissor
+	D3D12_VIEWPORT m_ScreenViewport;
+	D3D12_RECT m_ScissorRect;
 
-	// Descriptor heaps
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
+	// Shader stuff
+	ComPtr<ID3D12RootSignature> m_rootSignature;
+	ComPtr<ID3D12PipelineState> m_pipelineState;
 
 
-	DXGI_FORMAT m_BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // Backbuffer format
-	DXGI_FORMAT m_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // DeepStencil format
 
-	int m_ClientWidth = 1280;
-	int m_ClientHeight = 720;
+	int m_nClientWidth = 1280;
+	int m_nClientHeight = 720;
 };
 #endif
 
